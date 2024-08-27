@@ -187,15 +187,22 @@ final class ProjectQueryManager extends QueryManager implements IQueryManager {
      * @return a List of Project objects
      */
     @Override
-    public PaginatedResult getProjects(final String name, final boolean excludeInactive, final boolean onlyRoot, final Team notAssignedToTeam) {
+    public PaginatedResult getProjects(final String name, final boolean excludeInactive, final boolean onlyRoot, final Team notAssignedToTeam, final String purl) {
         final Query<Project> query = pm.newQuery(Project.class);
         if (orderBy == null) {
             query.setOrdering("version desc");
         }
 
         final var filterBuilder = new ProjectQueryFilterBuilder()
-                .excludeInactive(excludeInactive)
-                .withName(name);
+                .excludeInactive(excludeInactive);
+
+        if (name != null) {
+            filterBuilder.withName(name);
+        }
+
+        if (purl != null) {
+            filterBuilder.withFuzzyPurl(purl);
+        }
 
         if (onlyRoot) {
             filterBuilder.excludeChildProjects();
@@ -210,6 +217,10 @@ final class ProjectQueryManager extends QueryManager implements IQueryManager {
         final Map<String, Object> params = filterBuilder.getParams();
 
         preprocessACLs(query, queryFilter, params, false);
+
+        System.out.println("******** " + query);
+        System.out.println("******** " + params);
+
         return execute(query, params);
     }
 

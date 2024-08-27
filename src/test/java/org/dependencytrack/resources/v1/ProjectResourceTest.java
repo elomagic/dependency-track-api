@@ -23,6 +23,9 @@ import alpine.event.framework.EventService;
 import alpine.model.IConfigProperty.PropertyType;
 import alpine.server.filters.ApiFilter;
 import alpine.server.filters.AuthenticationFilter;
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURLBuilder;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
@@ -156,6 +159,47 @@ public class ProjectResourceTest extends ResourceTest {
         Assert.assertEquals(100, json.size());
         Assert.assertEquals("Acme Example", json.getJsonObject(0).getString("name"));
         Assert.assertEquals("999", json.getJsonObject(0).getString("version"));
+    }
+
+    @Test
+    public void getProjectsByPurlTest() throws MalformedPackageURLException {
+        for (int i=0; i<1000; i++) {
+            String v = "%s.0.0.1".formatted(i);
+            PackageURL purl = PackageURLBuilder
+                    .aPackageURL()
+                    .withType(PackageURL.StandardTypes.MAVEN)
+                    .withNamespace("org.dependencytrack")
+                    .withName("purl")
+                    .withVersion(v)
+                    .withQualifier("type", "jar")
+                    .build();
+            System.out.println(purl.canonicalize());
+            qm.createProject("PURL-RegEx-Example", null, v, null, null, purl, true, false);
+        }
+
+        Response response = jersey.target(V1_PROJECT)
+                // pkg:maven/org.dependencytrack/purl@51.0.0.1?type=jar
+                //.queryParam("purl", ".%2Aorg%5C.dependencytrack%2Fpurl%4051%5C.0%5C.0%5C.1.%2A")
+                .queryParam("purl", "pkg:maven/org\\.dependencytrack/purl@51\\.0\\.0\\.1.*")
+                .request()
+                .header(X_API_KEY, apiKey)
+                .get(Response.class);
+        Assert.assertEquals(200, response.getStatus(), 0);
+        Assert.assertEquals(String.valueOf(1), response.getHeaderString(TOTAL_COUNT_HEADER));
+
+        JsonArray json = parseJsonArray(response);
+        Assert.assertNotNull(json);
+        Assert.assertEquals(1, json.size());
+        Assert.assertEquals("51.0.0.1", json.getJsonObject(0).getString("version"));
+
+        response = jersey.target(V1_PROJECT)
+                .queryParam("purl", "pkg:maven/org\\.dependencytrack.*")
+                .request()
+                .header(X_API_KEY, apiKey)
+                .get(Response.class);
+
+        Assert.assertEquals(200, response.getStatus(), 0);
+        Assert.assertEquals(String.valueOf(1000), response.getHeaderString(TOTAL_COUNT_HEADER));
     }
 
     @Test

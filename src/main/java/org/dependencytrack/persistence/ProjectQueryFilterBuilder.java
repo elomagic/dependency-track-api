@@ -115,6 +115,13 @@ class ProjectQueryFilterBuilder {
         return this;
     }
 
+    ProjectQueryFilterBuilder withFuzzyPurl(String purl) {
+        params.put("purl", purl);
+
+        filterCriteria.add("(purl.matches(:purl))");
+        return this;
+    }
+
     String buildFilter() {
         return String.join(" && ", this.filterCriteria);
     }

@@ -405,8 +405,8 @@ public class QueryManager extends AlpineQueryManager {
         return getProjectQueryManager().getAllProjects(excludeInactive);
     }
 
-    public PaginatedResult getProjects(final String name, final boolean excludeInactive, final boolean onlyRoot, final Team notAssignedToTeam) {
-        return getProjectQueryManager().getProjects(name, excludeInactive, onlyRoot, notAssignedToTeam);
+    public PaginatedResult getProjects(final String name, final boolean excludeInactive, final boolean onlyRoot, final Team notAssignedToTeam, final String purl) {
+        return getProjectQueryManager().getProjects(name, excludeInactive, onlyRoot, notAssignedToTeam, purl);
     }
 
     public Project getProject(final String uuid) {

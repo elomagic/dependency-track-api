@@ -108,7 +108,9 @@ public class ProjectResource extends AlpineResource {
                                 @Parameter(description = "Optionally excludes children projects from being returned", required = false)
                                 @QueryParam("onlyRoot") boolean onlyRoot,
                                 @Parameter(description = "The UUID of the team which projects shall be excluded", schema = @Schema(type = "string", format = "uuid"), required = false)
-                                @QueryParam("notAssignedToTeamWithUuid") @ValidUuid String notAssignedToTeamWithUuid) {
+                                @QueryParam("notAssignedToTeamWithUuid") @ValidUuid String notAssignedToTeamWithUuid,
+                                @Parameter(description = "Optional purl (RegEx) of the project to query on", required = false)
+                                @QueryParam("purl") String purl) {
         try (QueryManager qm = new QueryManager(getAlpineRequest())) {
             Team notAssignedToTeam = null;
             if (StringUtils.isNotEmpty(notAssignedToTeamWithUuid)) {
@@ -118,7 +120,9 @@ public class ProjectResource extends AlpineResource {
                 }
             }
 
-            final PaginatedResult result = (name != null) ? qm.getProjects(name, excludeInactive, onlyRoot, notAssignedToTeam) : qm.getProjects(true, excludeInactive, onlyRoot, notAssignedToTeam);
+            final PaginatedResult result = (name != null || purl != null)
+                    ? qm.getProjects(name, excludeInactive, onlyRoot, notAssignedToTeam, purl)
+                    : qm.getProjects(true, excludeInactive, onlyRoot, notAssignedToTeam);
             return Response.ok(result.getObjects()).header(TOTAL_COUNT_HEADER, result.getTotal()).build();
         }
     }
