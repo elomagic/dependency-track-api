@@ -173,7 +173,6 @@ public class ProjectResourceTest extends ResourceTest {
                     .withVersion(v)
                     .withQualifier("type", "jar")
                     .build();
-            System.out.println(purl.canonicalize());
             qm.createProject("PURL-RegEx-Example", null, v, null, null, purl, true, false);
         }
 

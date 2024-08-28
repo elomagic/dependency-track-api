@@ -20,6 +20,7 @@ package org.dependencytrack.resources.v1;
 
 import alpine.model.IConfigProperty;
 import alpine.server.filters.ApiFilter;
+
 import org.dependencytrack.JerseyTestRule;
 import org.dependencytrack.ResourceTest;
 import org.dependencytrack.model.Project;
@@ -28,6 +29,9 @@ import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURLBuilder;
 import jakarta.ws.rs.core.Response;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -58,6 +62,25 @@ public class BadgeResourceTest extends ResourceTest {
                 .get(Response.class);
         Assert.assertEquals(200, response.getStatus(), 0);
         Assert.assertEquals("image/svg+xml", response.getHeaderString("Content-Type"));
+        Assert.assertTrue(isLikelySvg(getPlainTextBody(response)));
+    }
+
+    @Test
+    public void projectVulnerabilitiesByPurlTest() throws MalformedPackageURLException {
+        PackageURL purl1 = PackageURLBuilder.aPackageURL().withType(PackageURL.StandardTypes.MAVEN).withNamespace("groupId").withName("artifactId").withVersion("2.0.0").build();
+        qm.createProject("Acme Example", null, purl1.getVersion(), null, null, purl1, true, false);
+        PackageURL purl2 = PackageURLBuilder.aPackageURL().withType(PackageURL.StandardTypes.MAVEN).withNamespace("groupId").withName("artifactId").withVersion("1.0.0").build();
+        qm.createProject("Acme Example", null, purl2.getVersion(), null, null, purl2, true, false);
+
+        Response response = jersey
+                .target(V1_BADGE + "/vulns/project")
+                .queryParam("purl", "pkg:maven/groupId/artifactId@.*")
+                .queryParam("limit", "1000")
+                .request()
+                .get(Response.class);
+        Assert.assertEquals(200, response.getStatus(), 0);
+        Assert.assertEquals("image/svg+xml", response.getHeaderString("Content-Type"));
+        Assert.assertEquals("pkg:maven/groupId/artifactId@2.0.0", response.getHeaderString("DT-Project-PURL"));
         Assert.assertTrue(isLikelySvg(getPlainTextBody(response)));
     }
 
@@ -116,6 +139,24 @@ public class BadgeResourceTest extends ResourceTest {
                 .get(Response.class);
         Assert.assertEquals(200, response.getStatus(), 0);
         Assert.assertEquals("image/svg+xml", response.getHeaderString("Content-Type"));
+        Assert.assertTrue(isLikelySvg(getPlainTextBody(response)));
+    }
+
+    @Test
+    public void projectPolicyViolationsByPurlTest() throws MalformedPackageURLException {
+        PackageURL purl1 = PackageURLBuilder.aPackageURL().withType(PackageURL.StandardTypes.MAVEN).withNamespace("groupId").withName("artifactId").withVersion("2.0.0-SNAPSHOT").build();
+        qm.createProject("Acme Example", null, purl1.getVersion(), null, null, purl1, true, false);
+        PackageURL purl2 = PackageURLBuilder.aPackageURL().withType(PackageURL.StandardTypes.MAVEN).withNamespace("groupId").withName("artifactId").withVersion("1.0.0").build();
+        qm.createProject("Acme Example", null, purl2.getVersion(), null, null, purl2, true, false);
+
+        Response response = jersey
+                .target(V1_BADGE + "/violations/project")
+                .queryParam("purl", "pkg:maven/groupId/artifactId@.*")
+                .request()
+                .get(Response.class);
+        Assert.assertEquals(200, response.getStatus(), 0);
+        Assert.assertEquals("image/svg+xml", response.getHeaderString("Content-Type"));
+        Assert.assertEquals("pkg:maven/groupId/artifactId@2.0.0-SNAPSHOT", response.getHeaderString("DT-Project-PURL"));
         Assert.assertTrue(isLikelySvg(getPlainTextBody(response)));
     }
 

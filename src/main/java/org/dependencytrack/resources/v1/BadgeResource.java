@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.dependencytrack.model.Project;
 import org.dependencytrack.model.ProjectMetrics;
 import org.dependencytrack.model.validation.ValidUuid;
@@ -39,7 +41,10 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
+
+import java.util.Comparator;
 
 import static org.dependencytrack.model.ConfigPropertyConstants.GENERAL_BADGE_ENABLED;
 
@@ -89,6 +94,55 @@ public class BadgeResource extends AlpineResource {
                     return Response.ok(badger.generateVulnerabilities(metrics)).build();
                 } else {
                     return Response.status(Response.Status.NOT_FOUND).entity("The project could not be found.").build();
+                }
+            } else {
+                return Response.status(Response.Status.NO_CONTENT).build();
+            }
+        }
+    }
+
+    @GET
+    @Path("/vulns/project")
+    @Produces(SVG_MEDIA_TYPE)
+    @Operation(
+            summary = "Returns latest metrics for a specific project")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "A badge displaying current vulnerability metrics for a latest project in SVG format",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(responseCode = "204", description = "Badge support is disabled. No content will be returned."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "The project could not be found")
+    })
+    @AuthenticationNotRequired
+    public Response getLatestProjectVulnerabilitiesBadge(
+            @Parameter(description = "PURL (RegEx) of the project to query on", required = true)
+            @QueryParam("purl") String purl) {
+        try (QueryManager qm = new QueryManager()) {
+            if (isBadgeSupportEnabled(qm)) {
+
+                final Project project = qm.getProjects(
+                                null,
+                                true,
+                                true,
+                                null,
+                                purl)
+                        .getList(Project.class)
+                        .stream()
+                        .max(Comparator.comparing((Project o) -> new ComparableVersion(o.getVersion())))
+                        .orElse(null);
+
+                if (project != null) {
+                    final ProjectMetrics metrics = qm.getMostRecentProjectMetrics(project);
+                    final Badger badger = new Badger();
+                    return Response
+                            .ok(badger.generateVulnerabilities(metrics))
+                            .header("DT-Project-PURL", project.getPurl())
+                            .build();
+                } else {
+                    return Response.status(Response.Status.NOT_FOUND).entity("A project could not be found.").build();
                 }
             } else {
                 return Response.status(Response.Status.NO_CONTENT).build();
@@ -161,6 +215,54 @@ public class BadgeResource extends AlpineResource {
                     return Response.ok(badger.generateViolations(metrics)).build();
                 } else {
                     return Response.status(Response.Status.NOT_FOUND).entity("The project could not be found.").build();
+                }
+            } else {
+                return Response.status(Response.Status.NO_CONTENT).build();
+            }
+        }
+    }
+
+    @GET
+    @Path("/violations/project")
+    @Produces(SVG_MEDIA_TYPE)
+    @Operation(
+            summary = "Returns a policy violations badge for the latest specific project")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "A badge displaying current policy violation metrics of the latest project in SVG format",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(responseCode = "204", description = "Badge support is disabled. No content will be returned."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "The project could not be found")
+    })
+    @AuthenticationNotRequired
+    public Response getLatestProjectPolicyViolationsBadge(
+            @Parameter(description = "PURL (RegEx) of the project to query on", required = true)
+            @QueryParam("purl") String purl) {
+        try (QueryManager qm = new QueryManager()) {
+            if (isBadgeSupportEnabled(qm)) {
+                final Project project = qm.getProjects(
+                        null,
+                                true,
+                                true,
+                                null,
+                                purl)
+                        .getList(Project.class)
+                        .stream()
+                        .max(Comparator.comparing((Project o) -> new ComparableVersion(o.getVersion())))
+                        .orElse(null);
+
+                if (project != null) {
+                    final ProjectMetrics metrics = qm.getMostRecentProjectMetrics(project);
+                    final Badger badger = new Badger();
+                    return Response
+                            .ok(badger.generateViolations(metrics))
+                            .header("DT-Project-PURL", project.getPurl())
+                            .build();
+                } else {
+                    return Response.status(Response.Status.NOT_FOUND).entity("A project could not be found.").build();
                 }
             } else {
                 return Response.status(Response.Status.NO_CONTENT).build();

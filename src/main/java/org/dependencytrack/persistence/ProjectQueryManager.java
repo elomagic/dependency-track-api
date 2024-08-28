@@ -218,9 +218,6 @@ final class ProjectQueryManager extends QueryManager implements IQueryManager {
 
         preprocessACLs(query, queryFilter, params, false);
 
-        System.out.println("******** " + query);
-        System.out.println("******** " + params);
-
         return execute(query, params);
     }
 
