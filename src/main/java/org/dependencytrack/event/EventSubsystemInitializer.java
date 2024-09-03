@@ -29,6 +29,7 @@ import org.dependencytrack.common.ConfigKey;
 import org.dependencytrack.tasks.BomUploadProcessingTask;
 import org.dependencytrack.tasks.CallbackTask;
 import org.dependencytrack.tasks.ClearComponentAnalysisCacheTask;
+import org.dependencytrack.tasks.CleanupTask;
 import org.dependencytrack.tasks.CloneProjectTask;
 import org.dependencytrack.tasks.DefectDojoUploadTask;
 import org.dependencytrack.tasks.EpssMirrorTask;
@@ -121,6 +122,7 @@ public class EventSubsystemInitializer implements ServletContextListener {
         EVENT_SERVICE.subscribe(NistMirrorEvent.class, NistMirrorTask.class);
         EVENT_SERVICE.subscribe(NistApiMirrorEvent.class, NistApiMirrorTask.class);
         EVENT_SERVICE.subscribe(EpssMirrorEvent.class, EpssMirrorTask.class);
+        EVENT_SERVICE.subscribe(CleanupEvent.class, CleanupTask.class);
 
         EVENT_SERVICE_ST.subscribe(IndexEvent.class, IndexTask.class);
 
@@ -163,6 +165,7 @@ public class EventSubsystemInitializer implements ServletContextListener {
         EVENT_SERVICE.unsubscribe(NistMirrorTask.class);
         EVENT_SERVICE.unsubscribe(NistApiMirrorTask.class);
         EVENT_SERVICE.unsubscribe(EpssMirrorTask.class);
+        EVENT_SERVICE.unsubscribe(CleanupTask.class);
         EVENT_SERVICE.shutdown(DRAIN_TIMEOUT_DURATION);
 
         EVENT_SERVICE_ST.unsubscribe(IndexTask.class);

@@ -109,13 +109,17 @@ public enum ConfigPropertyConstants {
     SEARCH_INDEXES_CONSISTENCY_CHECK_ENABLED("search-indexes", "consistency.check.enabled", "true", PropertyType.BOOLEAN, "Flag to enable lucene indexes periodic consistency check"),
     SEARCH_INDEXES_CONSISTENCY_CHECK_CADENCE("search-indexes", "consistency.check.cadence", "4320", PropertyType.INTEGER, "Lucene indexes consistency check cadence (in minutes)"),
     SEARCH_INDEXES_CONSISTENCY_CHECK_DELTA_THRESHOLD("search-indexes", "consistency.check.delta.threshold", "20", PropertyType.INTEGER, "Threshold used to trigger an index rebuild when comparing database table and corresponding lucene index (in percentage). It must be an integer between 1 and 100"),
-    BOM_VALIDATION_ENABLED("artifact", "bom.validation.enabled", "true", PropertyType.BOOLEAN, "Flag to control bom validation");
+    BOM_VALIDATION_ENABLED("artifact", "bom.validation.enabled", "true", PropertyType.BOOLEAN, "Flag to control bom validation"),
+    CLEANUP_ENABLED("cleanup", "enabled", "false", PropertyType.BOOLEAN, "Flag to enable/disable clean up task"),
+    CLEANUP_VERSION_MATCH("cleanup", "versionMatch", "^\\d+(\\.\\d+)*(-.*)?-(SNAPSHOT|(b\\d{4}))$", PropertyType.STRING, "Regular expression to match version pattern"),
+    CLEANUP_OLDER_THEN_DAYS("cleanup", "afterDays", "90", PropertyType.INTEGER, "Cleanup projects older then X days"),
+    CLEANUP_DELETE_PROJECT("cleanup", "deleteProject", "false", PropertyType.BOOLEAN, "Selected project will be deleted and not set inactive");
 
-    private String groupName;
-    private String propertyName;
-    private String defaultPropertyValue;
-    private PropertyType propertyType;
-    private String description;
+    private final String groupName;
+    private final String propertyName;
+    private final String defaultPropertyValue;
+    private final PropertyType propertyType;
+    private final String description;
 
     ConfigPropertyConstants(String groupName, String propertyName, String defaultPropertyValue, PropertyType propertyType, String description) {
         this.groupName = groupName;
